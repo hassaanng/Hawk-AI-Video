@@ -1,0 +1,54 @@
+# Local-mode deployment. Requires:
+#   - NVIDIA driver installed on the host
+#   - nvidia-container-toolkit installed (provides the `nvidia` runtime below)
+# Verify with: docker run --rm --gpus all nvidia/cuda:12.1.1-base-ubuntu22.04 nvidia-smi
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+    image: ai-video-studio-backend:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - DEPLOYMENT_MODE=local
+      - DEFAULT_VIDEO_MODEL=ltx-video
+      - DEFAULT_TTS_ENGINE=xtts
+      - MAX_PARALLEL_GPU_JOBS=1
+      - HF_TOKEN=${HF_TOKEN:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      # Mount the weights cache as a named volume — without this, every
+      # `docker compose up` re-downloads tens of GB of model weights.
+      - models_cache:/app/models_cache
+      - outputs:/app/outputs
+      - uploads:/app/uploads
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    image: ai-video-studio-frontend:latest
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  models_cache:
+  outputs:
+  uploads:

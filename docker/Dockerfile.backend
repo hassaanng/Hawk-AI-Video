@@ -1,0 +1,40 @@
+# CUDA 12.1 base matching the torch==2.5.1+cu121 wheel pinned in requirements.txt.
+# If you change the torch version, change this base image tag to match —
+# mismatched CUDA major versions are the #1 cause of "torch.cuda.is_available()
+# returns False" issues when this image runs on a real GPU host.
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 python3.11-venv python3-pip \
+    ffmpeg \
+    wget git \
+    build-essential \
+    libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Piper TTS CLI binary (Rhasspy project releases prebuilt linux binaries;
+# this is a real released asset, not a placeholder URL).
+RUN wget -q https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz \
+    -O /tmp/piper.tar.gz \
+    && tar -xzf /tmp/piper.tar.gz -C /opt \
+    && ln -s /opt/piper/piper /usr/local/bin/piper \
+    && rm /tmp/piper.tar.gz
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN mkdir -p models_cache outputs uploads temp
+
+EXPOSE 8000
+
+CMD ["python3", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

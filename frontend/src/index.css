@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: #0a0d0c;
+  background-image:
+    radial-gradient(circle at 15% 0%, rgba(95, 230, 90, 0.05), transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(95, 216, 230, 0.04), transparent 45%);
+  color: #e7ece9;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a3330 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a3330;
+  border-radius: 4px;
+}
+
+.mono-num {
+  font-family: "IBM Plex Mono", monospace;
+  font-feature-settings: "tnum";
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.scan-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(95, 230, 90, 0.25), transparent);
+  animation: scan 1.8s linear infinite;
+}
+
+:focus-visible {
+  outline: 2px solid #5fe65a;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot, .scan-bar::after {
+    animation: none !important;
+  }
+}
