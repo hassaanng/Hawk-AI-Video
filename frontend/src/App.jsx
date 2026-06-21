@@ -13,13 +13,19 @@ export default function App() {
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [backendReady, setBackendReady] = useState(false);
 
   const { batch, error: pollError } = useBatchPolling(activeBatchId);
 
   useEffect(() => {
+    api.ensureBackendUrlLoaded().then(() => setBackendReady(true));
+  }, []);
+
+  useEffect(() => {
+    if (!backendReady) return;
     api.listModels().then(setModels).catch(() => {});
     api.listTtsEngines().then((r) => setTtsEngines(r.engines)).catch(() => {});
-  }, []);
+  }, [backendReady]);
 
   async function handleSingleSubmit(params) {
     setSubmitting(true);
@@ -45,6 +51,14 @@ export default function App() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (!backendReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-mono text-sm text-ink-400">Connecting to backend…</p>
+      </div>
+    );
   }
 
   return (
