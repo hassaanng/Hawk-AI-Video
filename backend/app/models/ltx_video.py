@@ -59,11 +59,15 @@ class LTXVideoModel(BaseVideoModel):
         logger.info("Loading LTX-Video weights from %s ...", REPO_ID)
         dtype = torch.bfloat16
 
+        ignore_these = ["*13b*", "ltx-video-2b-v0.9.safetensors", "ltx-video-2b-v0.9.1.safetensors"]
+
         self._t2v_pipeline = LTXPipeline.from_pretrained(
-            REPO_ID, torch_dtype=dtype, cache_dir=str(settings.models_cache_dir / "hf")
+            REPO_ID, torch_dtype=dtype, cache_dir=str(settings.models_cache_dir / "hf"),
+            ignore_patterns=ignore_these
         )
         self._i2v_pipeline = LTXImageToVideoPipeline.from_pretrained(
-            REPO_ID, torch_dtype=dtype, cache_dir=str(settings.models_cache_dir / "hf")
+            REPO_ID, torch_dtype=dtype, cache_dir=str(settings.models_cache_dir / "hf"),
+            ignore_patterns=ignore_these
         )
 
         self._t2v_pipeline.to("cuda")
